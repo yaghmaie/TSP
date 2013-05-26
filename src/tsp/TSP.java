@@ -11,6 +11,8 @@ package tsp;
 import java.util.Scanner;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.HashMap;
 
 /**
  * A solution that solves TSP problem
@@ -28,9 +30,9 @@ public class TSP {
      */
     static int[][] distances;
     /**
-     * Matrix to save subproblems data
+     * Map to save subproblems data
      */
-    static int[][] dpData;
+    static Map< Integer, Integer >[] dpData;
     
     /**
      * The method that calculates minimum moves for TSP problem.
@@ -53,8 +55,8 @@ public class TSP {
             dploc += Math.pow( 2, start<verSet.get(i)?verSet.get(i)-1:verSet.get(i) ) - 1;
         }
         
-        if( dpData[start][dploc] != 0 ) {                                       // Checks if there is data in dploc, and returns it if there is
-            return dpData[start][dploc];
+        if( dpData[start].get(dploc) != null ) {                                // Checks if there is data in dploc, and returns it if there is
+            return dpData[start].get(dploc);
         }
         
         for( i = 0; i < verSet.size(); i++ ) {
@@ -68,7 +70,7 @@ public class TSP {
             }
         }
         
-        dpData[start][dploc] = min;                                             // Saves the result in dpData
+        dpData[start].put( dploc, min );                                        // Saves the result in dpData
         
         return min;
     }
@@ -84,7 +86,11 @@ public class TSP {
         
         verCount = input.nextInt();                                             // Gets vertices count from stdio
         distances = new int[verCount][verCount];                                // Builds distances matrix
-        dpData = new int[verCount][ (int)( Math.pow( 2, verCount - 1 ) - 1 ) ]; // Builds dpData
+        
+        dpData = new HashMap[verCount];
+        for( i = 0; i < verCount; i++ ) {                                       // Builds dpData
+            dpData[i] = new HashMap< Integer, Integer >();
+        }
         
         for( i = 0; i < verCount; i++ ) {                                       // Generates vertices array
             vertices.add( i );
@@ -100,7 +106,7 @@ public class TSP {
             
         }
         
-        System.out.println("Please Enter Start and End vertices : ");
+        System.out.println("Please Enter Start Vertex : ");
         
         start = input.nextInt();                                                // Gets start vertex from stdio
         
