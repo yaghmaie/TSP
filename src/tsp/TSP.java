@@ -11,8 +11,6 @@ package tsp;
 import java.util.Scanner;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
-import java.util.HashMap;
 
 /**
  * A solution that solves TSP problem
@@ -30,9 +28,9 @@ public class TSP {
      */
     static int[][] distances;
     /**
-     * Map to save subproblems data
+     * Matrix to save subproblems data
      */
-    static Map< Integer, Integer >[] dpData;
+    static int[][] dpData;
     
     /**
      * The method that calculates minimum moves for TSP problem.
@@ -55,8 +53,8 @@ public class TSP {
             dploc += Math.pow( 2, start<verSet.get(i)?verSet.get(i)-1:verSet.get(i) ) - 1;
         }
         
-        if( dpData[start].get(dploc) != null ) {                                // Checks if there is data in dploc, and returns it if there is
-            return dpData[start].get(dploc);
+        if( dpData[start][dploc] != 0 ) {                                       // Checks if there is data in dploc, and returns it if there is
+            return dpData[start][dploc];
         }
         
         for( i = 0; i < verSet.size(); i++ ) {
@@ -70,7 +68,7 @@ public class TSP {
             }
         }
         
-        dpData[start].put( dploc, min );                                        // Saves the result in dpData
+        dpData[start][dploc] = min;                                             // Saves the result in dpData
         
         return min;
     }
@@ -86,11 +84,7 @@ public class TSP {
         
         verCount = input.nextInt();                                             // Gets vertices count from stdio
         distances = new int[verCount][verCount];                                // Builds distances matrix
-        
-        dpData = new HashMap[verCount];
-        for( i = 0; i < verCount; i++ ) {                                       // Builds dpData
-            dpData[i] = new HashMap< Integer, Integer >();
-        }
+        dpData = new int[verCount][ (int)( Math.pow( 2, verCount - 1 ) - 1 ) ]; // Builds dpData
         
         for( i = 0; i < verCount; i++ ) {                                       // Generates vertices array
             vertices.add( i );
