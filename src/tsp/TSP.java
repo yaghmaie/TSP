@@ -20,7 +20,7 @@ import java.util.logging.Logger;
 /**
  * A solution that solves TSP problem
  * Using standard input and output
- * 
+ * Multi Threaded
  * @author peji
  */
 public class TSP {
@@ -37,22 +37,43 @@ public class TSP {
      */
     static int[][] dpData;
     
+    /**
+     * A runnable solution for TSP
+     * Used for multi threading
+     */
     private static class TSPThread implements Runnable {
-        
+        /**
+         * start and end vertices for problem
+         */
         private static int start, end;
+        /**
+         * set of vertices to go
+         */
         private static List<Integer> verSet;
+        /**
+         * Specific index for thread
+         * Used for saving result in sharedData array
+         */
         final int sharedIndex;
+        /**
+         * sharedData array used to save threads results
+         * Each thread has it's own index ( sharedIndex )
+         */
         final int[] sharedData;
-        
+        /**
+         * Constructor to setup thread data
+         * @param start is the vertex to start from
+         * @param verSet is the set of vertices that should be passed
+         * @param end is the vertex should be returned to after traveling all vertices in verSet
+         * @param index is index of thread
+         * @param sharedData is shared array between threads, used to save results
+         */
         TSPThread( int start, List<Integer> verSet, int end, int index, int[] sharedData ) {
             this.start = start;
             this.end = end;
             this.verSet = verSet;
             this.sharedData = sharedData;
             this.sharedIndex = index;
-            synchronized( sharedData ) {
-                sharedData.notify();
-            }
         }
         
         /**
@@ -60,7 +81,7 @@ public class TSP {
          * Works with O( n^2 * 2^n )
          * @param start is the vertex to start from
          * @param verSet is the set of vertices that should be passed
-         * @param end is the vertex should be returned to after traveling all vertices in @param verSet
+         * @param end is the vertex should be returned to after traveling all vertices in verSet
          * @return the minimum moves
          */
         private static int g( int start, List<Integer> verSet ) {
@@ -98,7 +119,7 @@ public class TSP {
         
         @Override
         public void run() {
-            sharedData[ sharedIndex ] += g( start, verSet );
+            sharedData[ sharedIndex ] += g( start, verSet );                        // Solves problem in thread and stores result in sharedData[ sharedIndex ]
         }
         
     }
@@ -111,48 +132,44 @@ public class TSP {
         int[] sharedData = new int[ vertices.size() ];
         List list;
 
-        if( vertices.isEmpty() ) {                                              // Checks if there is no vertex to travel to, retruns the distance from "start" to "end"
+        if( vertices.isEmpty() ) {                                                  // Checks if there is no vertex to travel to, retruns the distance from "start" to "end"
             return distances[start][end];
         }
         
+        /*
+         * For each vertex in 'vertices' list, one thread will be run
+         * Each thread solves it's subproblem and stores data in sharedData array
+         */
+        
         for( int i = 0; i < vertices.size(); i++ ) {
-            elem = vertices.get(i);                                             // Gets the ith element from verSet and sets elem to it
-            list = new ArrayList< Integer >();                                  // Makes a new list for next subproblem
-            list.addAll( vertices );                                            // Adds All verSet elements to new list
-            list.remove( list.indexOf( elem ) );                                // Removes elem from new list
-            sharedData[i] = distances[start][elem];
-            executor.execute( new TSPThread( elem, list, end, i, sharedData ) );
-           /* try {
-                synchronized( sharedData ) {
-                    sharedData.wait();
-                }
+            elem = vertices.get(i);                                                 // Gets the ith element from verSet and sets elem to it
+            list = new ArrayList< Integer >();                                      // Makes a new list for next subproblem
+            list.addAll( vertices );                                                // Adds All verSet elements to new list
+            list.remove( list.indexOf( elem ) );                                    // Removes elem from new list
+            sharedData[i] = distances[start][elem];                                 // Adding distance between start and elem to sharedData
+            executor.execute( new TSPThread( elem, list, end, i, sharedData ) );    // Adds and executes thread in threadpool
             
+            try {
+                Thread.sleep(20);                                                   // Waits 20 ms
             } catch (InterruptedException ex) {
-                Logger.getLogger(TSP.class.getName()).log(Level.SEVERE, null, ex);
-            }*/
-            //    /*
-                try {
-                    Thread.sleep(20);
-                } catch (InterruptedException ex) {
-                    System.out.println( ex.getMessage() );
-                }
-               // */
+                System.out.println( ex.getMessage() );
+            }
         }
         
-        executor.shutdown();
+        executor.shutdown();                                                        // Tells threadpool shutdown after all threads terminated
         
         try {
-            while( ! executor.isTerminated() )
+            while( ! executor.isTerminated() )                                      // While threadpool is not terminated wait
                 Thread.sleep(200);
         } catch (InterruptedException ex) {
             System.out.println( ex.getMessage() );
         }
         
         for( int i = 0; i < sharedData.length; i++ ) {
-            min = sharedData[i] < min ? sharedData[i] : min;
+            min = sharedData[i] < min ? sharedData[i] : min;                        // Looks in sharedData for least result
         }
 
-        return min;
+        return min;                                                                 // Returns minimum cost
     }
     
     public static void main(String[] args) {
